@@ -15,11 +15,13 @@ and the punch lands on the last five words.
 Only the Python standard library is used. Before anything is written,
 the line is run through every gate the competition kit states: valid
 UTF-8, between 1 and 180 characters, a single line, not blank, and
-free of control characters. If any gate fails the program prints the
-failure and exits without touching the output file. After writing, it
-reads the file back and refuses to report success unless the bytes on
-disk match the line exactly -- no trailing newline is added, so the
-file holds one line and nothing else.
+free of control characters -- plus two hygiene gates of our own, no
+leading or trailing whitespace and no DEL character, so the line the
+judge reads is exactly the line as written. If any gate fails the
+program prints the failure and exits without touching the output
+file. After writing, it reads the file back and refuses to report
+success unless the bytes on disk match the line exactly -- no
+trailing newline is added, so the file holds one line and nothing else.
 """
 
 import os
@@ -53,9 +55,11 @@ def gate_failures(line):
         )
     if not line.strip():
         failures.append("entry is only whitespace")
+    if line != line.strip():
+        failures.append("entry has leading or trailing whitespace")
     if "\n" in line or "\r" in line:
         failures.append("entry must be a single line")
-    if any(ord(ch) < 0x20 for ch in line):
+    if any(ord(ch) < 0x20 or ord(ch) == 0x7F for ch in line):
         failures.append("entry contains a control character")
     return failures
 
